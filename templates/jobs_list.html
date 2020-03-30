@@ -5,9 +5,11 @@
 
 {% block content %}
     <div class="add-work text-right">
-        <a href="/add_job">
-            <h5>Добавить работу</h5>
-        </a>
+        {% if current_user.is_authenticated  %}
+            <a href="/add_job">
+                <h5>Добавить работу</h5>
+            </a>
+        {% endif %}
     </div>
     <div class="title-line text-center">
         <h2>Список работ</h2>
@@ -37,6 +39,12 @@
                     </tr>
                 </tbody>
             </table>
+            {% if current_user.id == 1 or current_user.id == job.team_leader %}
+                <div class="row" style="margin: 0 0 30px;">
+                    <a href="/corr_job/{{ job.id }}"><button type="button" class="btn btn-info" style="margin-right: 10px;">Изменить</button></a>
+                    <a href="/del_job/{{ job.id }}"><button type="button" class="btn btn-danger">Удалить</button></a>
+                </div>
+            {% endif %}
         {% endfor %}
     </div>
 {% endblock %}
