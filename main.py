@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from flask import Flask, render_template, redirect
-from flask_login import LoginManager, login_user, login_required, logout_user
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 
 from data import db_session
 from data.forms.add_work_form import AddWorkForm
@@ -86,6 +86,40 @@ def add_job():
             session.commit()
             return redirect('/jobs_list')
     return render_template('add_job.html', form=form, title='Добавление работы')
+
+
+@app.route("/corr_job/<job_id>", methods=['GET', 'POST'])
+@login_required
+def corr_job(job_id):
+    form = AddWorkForm()
+    session = db_session.create_session()
+    if (current_user.id == session.query(Jobs).filter(Jobs.id == job_id).first().team_leader) or (current_user.id == 1):
+        if form.validate_on_submit():
+            correct_job = session.query(Jobs).filter(Jobs.id == job_id).first()
+            correct_job.job = form.job.data
+            correct_job.work_size = form.work_size.data
+            correct_job.collaborators = form.collaborators.data
+            correct_job.is_finished = form.is_finished.data
+            correct_job.team_leader = form.team_leader.data
+            session.commit()
+            return redirect('/jobs_list')
+        return render_template('add_job.html', title='Редактирование работы', form=form,
+                               job=session.query(Jobs).filter(Jobs.id == job_id).first())
+    else:
+        return 'Ошибка доступа!'
+
+
+@app.route("/del_job/<job_id>", methods=['GET', 'POST'])
+@login_required
+def del_job(job_id):
+    session = db_session.create_session()
+    if (current_user.id == session.query(Jobs).filter(Jobs.id == job_id).first().team_leader) or (current_user.id == 1):
+        to_del_job = session.query(Jobs).filter(Jobs.id == job_id).first()
+        session.delete(to_del_job)
+        session.commit()
+        return redirect('/jobs_list')
+    else:
+        return 'Ошибка доступа!'
 
 
 @app.route('/register', methods=['GET', 'POST'])
