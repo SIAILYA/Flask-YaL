@@ -4,6 +4,8 @@ from flask import Flask, render_template, redirect
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 
 from data import db_session
+from data.departments import Department
+from data.forms.add_dep_form import AddDepartmentForm
 from data.forms.add_work_form import AddWorkForm
 from data.forms.login_form import LoginForm
 from data.forms.register_form import RegisterForm
@@ -118,6 +120,64 @@ def del_job(job_id):
         session.delete(to_del_job)
         session.commit()
         return redirect('/jobs_list')
+    else:
+        return 'Ошибка доступа!'
+
+
+@app.route("/departments_list")
+def departments_list():
+    session = db_session.create_session()
+    departments = session.query(Department).all()
+    users = session.query(User).all()
+    us = {}
+    for u in users:
+        us.update({u.id: u.surname + ' ' + u.name})
+    return render_template("departments_list.html", departments=departments, us=us)
+
+
+@app.route("/add_dep", methods=['GET', 'POST'])
+@login_required
+def add_dep():
+    form = AddDepartmentForm()
+    session = db_session.create_session()
+    if form.validate_on_submit():
+        new_dep = Department(title=form.title.data,
+                             chief=form.chief.data,
+                             members=form.members.data,
+                             email=form.email.data)
+        session.add(new_dep)
+        session.commit()
+        return redirect('/departments_list')
+    return render_template('add_dep.html', form=form, title='Добавление работы')
+
+
+@app.route("/corr_dep/<dep_id>", methods=['GET', 'POST'])
+@login_required
+def corr_dep(dep_id):
+    form = AddDepartmentForm()
+    session = db_session.create_session()
+    if (current_user.id == session.query(Department).filter(Department.id == dep_id).first().chief) or (current_user.id == 1):
+        if form.validate_on_submit():
+            to_corr_dep = session.query(Department).filter(Department.id == dep_id).first()
+            to_corr_dep.title = form.title.data
+            to_corr_dep.chief = form.chief.data
+            to_corr_dep.email = form.email.data
+            session.commit()
+            return redirect('/departments_list')
+        return render_template('add_dep.html', title='Редактирование департамента', form=form,
+                               dep=session.query(Department).filter(Department.id == dep_id).first())
+    else:
+        return 'Ошибка доступа!'
+
+
+@app.route("/del_dep/<dep_id>", methods=['GET', 'POST'])
+@login_required
+def del_dep(dep_id):
+    session = db_session.create_session()
+    if (current_user.id == session.query(Department).filter(Department.id == dep_id).first().chief) or (current_user.id == 1):
+        session.delete(session.query(Department).filter(Department.id == dep_id).first())
+        session.commit()
+        return redirect('/departments_list')
     else:
         return 'Ошибка доступа!'
 
