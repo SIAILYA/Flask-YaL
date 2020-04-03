@@ -4,6 +4,7 @@ from flask import Flask, render_template, redirect, make_response, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 
 import jobs_api
+import users_api
 from data import db_session
 from data.departments import Department
 from data.forms.add_dep_form import AddDepartmentForm
@@ -50,6 +51,7 @@ def logout():
 def main():
     db_session.global_init(r"C:\Users\Ilya\PycharmProjects\MarsOne-Flask\db\jobs.sqlite")
     app.register_blueprint(jobs_api.blueprint)
+    app.register_blueprint(users_api.blueprint)
     app.run()
 
 
