@@ -1,8 +1,9 @@
 from datetime import datetime
 
-from flask import Flask, render_template, redirect
+from flask import Flask, render_template, redirect, make_response, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 
+import jobs_api
 from data import db_session
 from data.departments import Department
 from data.forms.add_dep_form import AddDepartmentForm
@@ -47,8 +48,14 @@ def logout():
 
 
 def main():
-    db_session.global_init("db/jobs.sqlite")
+    db_session.global_init(r"C:\Users\Ilya\PycharmProjects\MarsOne-Flask\db\jobs.sqlite")
+    app.register_blueprint(jobs_api.blueprint)
     app.run()
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
 
 
 @app.route('/')
@@ -156,7 +163,8 @@ def add_dep():
 def corr_dep(dep_id):
     form = AddDepartmentForm()
     session = db_session.create_session()
-    if (current_user.id == session.query(Department).filter(Department.id == dep_id).first().chief) or (current_user.id == 1):
+    if (current_user.id == session.query(Department).filter(Department.id == dep_id).first().chief) or (
+            current_user.id == 1):
         if form.validate_on_submit():
             to_corr_dep = session.query(Department).filter(Department.id == dep_id).first()
             to_corr_dep.title = form.title.data
@@ -174,7 +182,8 @@ def corr_dep(dep_id):
 @login_required
 def del_dep(dep_id):
     session = db_session.create_session()
-    if (current_user.id == session.query(Department).filter(Department.id == dep_id).first().chief) or (current_user.id == 1):
+    if (current_user.id == session.query(Department).filter(Department.id == dep_id).first().chief) or (
+            current_user.id == 1):
         session.delete(session.query(Department).filter(Department.id == dep_id).first())
         session.commit()
         return redirect('/departments_list')
