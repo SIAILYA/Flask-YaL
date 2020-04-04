@@ -2,9 +2,11 @@ from datetime import datetime
 
 from flask import Flask, render_template, redirect, make_response, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask_restful import Api
 
 import jobs_api
 import users_api
+import users_resource
 from data import db_session
 from data.departments import Department
 from data.forms.add_dep_form import AddDepartmentForm
@@ -18,6 +20,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+api = Api(app)
+api.add_resource(users_resource.UsersResource, '/api/v2/users/<int:user_id>')
+api.add_resource(users_resource.UsersListResource, '/api/v2/users')
 
 
 @login_manager.user_loader
@@ -49,7 +55,7 @@ def logout():
 
 
 def main():
-    db_session.global_init(r"C:\Users\Ilya\PycharmProjects\MarsOne-Flask\db\jobs.sqlite")
+    db_session.global_init(r"C:\Yandex\Flask-YaL\db\jobs.sqlite")
     app.register_blueprint(jobs_api.blueprint)
     app.register_blueprint(users_api.blueprint)
     app.run()
