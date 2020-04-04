@@ -5,6 +5,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from flask_restful import Api
 
 import jobs_api
+import jobs_resource
 import users_api
 import users_resource
 from data import db_session
@@ -24,6 +25,8 @@ login_manager.init_app(app)
 api = Api(app)
 api.add_resource(users_resource.UsersResource, '/api/v2/users/<int:user_id>')
 api.add_resource(users_resource.UsersListResource, '/api/v2/users')
+api.add_resource(jobs_resource.JobsResource, '/api/v2/jobs/<int:job_id>')
+api.add_resource(jobs_resource.JobsListResource, '/api/v2/jobs')
 
 
 @login_manager.user_loader
